@@ -9,73 +9,27 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-body{
-    font-family:Segoe UI,Arial,sans-serif;
-    background:#f4f4f4;
-    margin:0;
-}
+body{font-family:Segoe UI,Arial,sans-serif;background:#f4f4f4;margin:0}
 .dark-mode{background:#121212;color:#e6e6e6}
-
-.app-container{
-    max-width:480px;
-    margin:20px auto;
-    background:#fff;
-    padding:22px;
-    border-radius:22px;
-    box-shadow:0 8px 22px rgba(0,0,0,.1)
-}
+.app-container{max-width:480px;margin:20px auto;background:#fff;padding:22px;border-radius:22px;box-shadow:0 8px 22px rgba(0,0,0,.1)}
 .dark-mode .app-container{background:#1f1f1f}
-
 h1{text-align:center;color:#007bff;margin-bottom:5px}
 h6{text-align:center;color:#555;margin-top:0}
 .dark-mode h6{color:#bbb}
-
 label{font-weight:600;margin-top:12px;display:block}
-input,button{
-    width:100%;
-    padding:12px;
-    margin-top:6px;
-    border-radius:12px;
-    border:1px solid #bbb;
-    font-size:1rem
-}
+input,button{width:100%;padding:12px;margin-top:6px;border-radius:12px;border:1px solid #bbb;font-size:1rem}
 input[readonly]{background:#eef6ff;font-weight:bold}
 .dark-mode input[readonly]{background:#1b2a3a;color:#fff}
-
-button{
-    background:#007bff;
-    color:#fff;
-    border:none;
-    cursor:pointer
-}
+button{background:#007bff;color:#fff;border:none;cursor:pointer}
 button:hover{background:#7f00ff}
-
 .toggle-buttons{display:flex;gap:5px;margin:15px 0}
 .toggle-button{flex:1;font-weight:bold}
 .toggle-button.active{background:#7f00ff}
-
 .tab-container{display:none}
 .tab-container.active{display:block}
-
 .result-highlight{border:2px solid #007bff}
-
-/* Print Summary */
-#printSummary{display:none}
-@media print{
-    body *{visibility:hidden}
-    #printSummary, #printSummary *{visibility:visible}
-    #printSummary{
-        position:absolute;
-        top:0;
-        left:0;
-        width:100%;
-        background:#fff;
-        color:#000
-    }
-}
 </style>
 </head>
-
 <body>
 
 <button onclick="toggleDarkMode()" style="margin:10px">Toggle Dark Mode</button>
@@ -104,7 +58,6 @@ button:hover{background:#7f00ff}
 <label>Total Levies</label><input id="t1" readonly class="result-highlight">
 <label>VAT Inclusive</label><input id="vi" readonly>
 
-<button onclick="printVAT('Standard Rate')">Print Summary</button>
 <button onclick="exportPDF('Standard Rate')">Export PDF</button>
 </div>
 
@@ -122,7 +75,6 @@ button:hover{background:#7f00ff}
 <label>Total Levies</label><input id="t2" readonly class="result-highlight">
 <label>Cost</label><input id="c2" readonly>
 
-<button onclick="printVAT('VAT Inclusive')">Print Summary</button>
 <button onclick="exportPDF('VAT Inclusive')">Export PDF</button>
 </div>
 
@@ -137,27 +89,12 @@ button:hover{background:#7f00ff}
 <label>VAT (3%)</label><input id="v3" readonly>
 <label>VAT Inclusive</label><input id="vi3" readonly>
 
-<button onclick="printVAT('Flat Rate Scheme')">Print Summary</button>
 <button onclick="exportPDF('Flat Rate Scheme')">Export PDF</button>
 </div>
 </div>
 
-<!-- PRINT SUMMARY -->
-<div id="printSummary">
-<h2 style="text-align:center">VAT TRANSACTION SUMMARY</h2>
-<p id="ptype"></p>
-<p id="pdate"></p>
-<p>Cost: <span id="pcost"></span></p>
-<p>NHIL: <span id="pnh"></span></p>
-<p>GETFund: <span id="pgf"></span></p>
-<p>VAT: <span id="pvat"></span></p>
-<p>Total Levies: <span id="ptotal"></span></p>
-<p>VAT Inclusive: <span id="pvi"></span></p>
-</div>
-
 <script>
-const fmt=n=>Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
-const jsPDFLib = window.jspdf.jsPDF;
+const fmt = n => Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
 
 function toggleDarkMode(){document.body.classList.toggle("dark-mode")}
 function showApp(i){
@@ -169,65 +106,80 @@ document.querySelectorAll(".toggle-button")[x].classList.toggle("active",x===i)
 function reset(id){document.querySelectorAll("#"+id+" input").forEach(i=>i.value="")}
 
 function calculate1(){
-const c=+cost.value
-const nhil=.025*c, gflev=.025*c, vat=.15*c
-nh.value=fmt(nhil); gf.value=fmt(gflev); v.value=fmt(vat)
-t1.value=fmt(nhil+gflev+vat)
-vi.value=fmt(c+nhil+gflev+vat)
+const c = +document.getElementById("cost").value
+const nhil = 0.025*c, gflev = 0.025*c, vat = 0.15*c
+document.getElementById("nh").value = fmt(nhil)
+document.getElementById("gf").value = fmt(gflev)
+document.getElementById("v").value = fmt(vat)
+document.getElementById("t1").value = fmt(nhil+gflev+vat)
+document.getElementById("vi").value = fmt(c+nhil+gflev+vat)
 }
+
 function calculate2(){
-const viVal=+vi2.value
-const c=viVal/1.2
-nh2.value=fmt(.025*c)
-gf2.value=fmt(.025*c)
-v2.value=fmt(.15*c)
-t2.value=fmt(.2*c)
-c2.value=fmt(c)
+const viVal = +document.getElementById("vi2").value
+const c = viVal / 1.2
+document.getElementById("nh2").value = fmt(0.025*c)
+document.getElementById("gf2").value = fmt(0.025*c)
+document.getElementById("v2").value = fmt(0.15*c)
+document.getElementById("t2").value = fmt(0.2*c)
+document.getElementById("c2").value = fmt(c)
 }
+
 function calculate3(){
-const c=+c3.value
-v3.value=fmt(.03*c)
-vi3.value=fmt(c*1.03)
+const c = +document.getElementById("c3").value
+document.getElementById("v3").value = fmt(0.03*c)
+document.getElementById("vi3").value = fmt(c*1.03)
 }
 
 function fillSummary(type){
-ptype.innerText="Transaction Type: "+type
-pdate.innerText="Date: "+new Date().toLocaleString()
-pcost.innerText=cost.value||c2.value||c3.value||"—"
-pnh.innerText=nh.value||nh2.value||"—"
-pgf.innerText=gf.value||gf2.value||"—"
-pvat.innerText=v.value||v2.value||v3.value||"—"
-ptotal.innerText=t1.value||t2.value||"—"
-pvi.innerText=vi.value||vi2.value||vi3.value||"—"
+window.summary = {
+type: type,
+date: new Date().toLocaleString(),
+cost: document.getElementById("cost").value || document.getElementById("c2").value || document.getElementById("c3").value || "—",
+nh: document.getElementById("nh").value || document.getElementById("nh2").value || "—",
+gf: document.getElementById("gf").value || document.getElementById("gf2").value || "—",
+vat: document.getElementById("v").value || document.getElementById("v2").value || document.getElementById("v3").value || "—",
+total: document.getElementById("t1").value || document.getElementById("t2").value || "—",
+vi: document.getElementById("vi").value || document.getElementById("vi2").value || document.getElementById("vi3").value || "—"
 }
-function printVAT(type){fillSummary(type);window.print()}
+}
 
 function exportPDF(type){
 fillSummary(type)
-const pdf=new jsPDFLib()
+const { jsPDF } = window.jspdf
+const pdf = new jsPDF()
+
 pdf.setFont("helvetica","bold")
 pdf.setFontSize(18)
-pdf.text("RAS 2026 VAT TRANSACTION SUMMARY",20,20)
+pdf.text("RAS 2026 VAT TRANSACTION SUMMARY", 20, 20)
 pdf.setFontSize(12)
 pdf.setFont("helvetica","normal")
-pdf.text("Business/Platform Name: ______________________",20,30)
-pdf.text("Date: "+new Date().toLocaleString(),20,38)
-pdf.text("Transaction Type: "+type,20,46)
-pdf.line(20,50,190,50) // horizontal line
+pdf.text("Business/Platform Name: ______________________", 20, 28)
+pdf.text("Date: " + summary.date, 20, 36)
+pdf.text("Transaction Type: " + summary.type, 20, 44)
 
-let y=58
-;[
-["Cost",pcost.innerText],
-["NHIL",pnh.innerText],
-["GETFund",pgf.innerText],
-["VAT",pvat.innerText],
-["Total Levies",ptotal.innerText],
-["VAT Inclusive",pvi.innerText]
-].forEach(r=>{pdf.text(r[0]+": "+r[1],20,y); y+=8})
+// Table headers
+const startY = 52
+const rowHeight = 10
+const colX = [20, 120]
+const fields = [
+["Cost", summary.cost],
+["NHIL", summary.nh],
+["GETFund", summary.gf],
+["VAT", summary.vat],
+["Total Levies", summary.total],
+["VAT Inclusive", summary.vi]
+]
 
-pdf.line(20,y+2,190,y+2)
+fields.forEach((f,i)=>{
+  const y = startY + i*rowHeight
+  pdf.rect(colX[0]-2, y-7, 170, rowHeight)
+  pdf.text(f[0], colX[0], y)
+  pdf.text(f[1], colX[1], y)
+})
+
 pdf.setFontSize(10)
-pdf.text("Generated by RAS 2026 VAT Calculator",20,y+10)
+pdf.text("Generated by RAS 2026 VAT Calculator", 20, startY + fields.length*rowHeight + 8)
 pdf.save("VAT_Summary_2026.pdf")
 }
 </script>

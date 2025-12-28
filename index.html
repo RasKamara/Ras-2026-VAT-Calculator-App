@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RAS 2026 VAT Calculator</title>
 
-<!-- jsPDF CDN -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
@@ -28,32 +27,42 @@ button:hover{background:#7f00ff}
 .tab-container{display:none}
 .tab-container.active{display:block}
 .result-highlight{border:2px solid #007bff}
+.toggle-row{display:flex;gap:10px;margin-top:10px}
+.toggle-row label{font-weight:normal}
 </style>
 </head>
+
 <body>
 
 <button onclick="toggleDarkMode()" style="margin:10px">Toggle Dark Mode</button>
 
 <div class="app-container">
 <h1>RAS 2026 VAT CALCULATOR</h1>
-<h6>Ghana VAT • NHIL • GETFund</h6>
+<h6>Ghana VAT • NHIL • GETFund • CST • Tourism Levy</h6>
 
 <div class="toggle-buttons">
-    <button class="toggle-button active" onclick="showApp(0)">Cost</button>
-    <button class="toggle-button" onclick="showApp(1)">VAT Inclusive</button>
-    <button class="toggle-button" onclick="showApp(2)">Flat Rate</button>
+  <button class="toggle-button active" onclick="showApp(0)">Cost</button>
+  <button class="toggle-button" onclick="showApp(1)">VAT Inclusive</button>
+  <button class="toggle-button" onclick="showApp(2)">Flat Rate</button>
 </div>
 
-<!-- APP 1 -->
+<!-- ================= APP 1 ================= -->
 <div id="app1" class="tab-container active">
 <label>Cost</label>
 <input type="number" id="cost">
+
+<div class="toggle-row">
+  <label><input type="checkbox" id="cstToggle"> Apply CST (5%)</label>
+  <label><input type="checkbox" id="tourismToggle"> Apply Tourism Levy (1%)</label>
+</div>
 
 <button onclick="calculate1()">Calculate</button>
 <button onclick="reset('app1')">Reset</button>
 
 <label>NHIL (2.5%)</label><input id="nh" readonly>
 <label>GETFund (2.5%)</label><input id="gf" readonly>
+<label>CST (5%)</label><input id="cst1" readonly>
+<label>Tourism Levy (1%)</label><input id="tourism1" readonly>
 <label>VAT (15%)</label><input id="v" readonly>
 <label>Total Levies</label><input id="t1" readonly class="result-highlight">
 <label>VAT Inclusive</label><input id="vi" readonly>
@@ -61,16 +70,23 @@ button:hover{background:#7f00ff}
 <button onclick="exportPDF('Standard Rate')">Export PDF</button>
 </div>
 
-<!-- APP 2 -->
+<!-- ================= APP 2 ================= -->
 <div id="app2" class="tab-container">
 <label>VAT Inclusive</label>
 <input type="number" id="vi2">
+
+<div class="toggle-row">
+  <label><input type="checkbox" id="cstToggle2"> Apply CST (5%)</label>
+  <label><input type="checkbox" id="tourismToggle2"> Apply Tourism Levy (1%)</label>
+</div>
 
 <button onclick="calculate2()">Calculate</button>
 <button onclick="reset('app2')">Reset</button>
 
 <label>NHIL</label><input id="nh2" readonly>
 <label>GETFund</label><input id="gf2" readonly>
+<label>CST</label><input id="cst2" readonly>
+<label>Tourism Levy</label><input id="tourism2" readonly>
 <label>VAT</label><input id="v2" readonly>
 <label>Total Levies</label><input id="t2" readonly class="result-highlight">
 <label>Cost</label><input id="c2" readonly>
@@ -78,7 +94,7 @@ button:hover{background:#7f00ff}
 <button onclick="exportPDF('VAT Inclusive')">Export PDF</button>
 </div>
 
-<!-- APP 3 -->
+<!-- ================= APP 3 ================= -->
 <div id="app3" class="tab-container">
 <label>Cost</label>
 <input type="number" id="c3">
@@ -94,7 +110,7 @@ button:hover{background:#7f00ff}
 </div>
 
 <script>
-const fmt = n => Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmt=n=>Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
 
 function toggleDarkMode(){document.body.classList.toggle("dark-mode")}
 function showApp(i){
@@ -103,84 +119,78 @@ document.getElementById(id).classList.toggle("active",x===i)
 document.querySelectorAll(".toggle-button")[x].classList.toggle("active",x===i)
 })
 }
-function reset(id){document.querySelectorAll("#"+id+" input").forEach(i=>i.value="")}
+function reset(id){document.querySelectorAll("#"+id+" input").forEach(i=>{i.type==="checkbox"?i.checked=false:i.value=""})}
 
+/* ---------- APP 1 ---------- */
 function calculate1(){
-const c = +document.getElementById("cost").value
-const nhil = 0.025*c, gflev = 0.025*c, vat = 0.15*c
-document.getElementById("nh").value = fmt(nhil)
-document.getElementById("gf").value = fmt(gflev)
-document.getElementById("v").value = fmt(vat)
-document.getElementById("t1").value = fmt(nhil+gflev+vat)
-document.getElementById("vi").value = fmt(c+nhil+gflev+vat)
+  const c = +cost.value || 0;
+
+  const nhilAmt = 0.025 * c;
+  const getFundAmt = 0.025 * c;
+
+  const cstAmt = cstToggle.checked ? 0.05 * c : 0;
+  const tourismAmt = tourismToggle.checked ? 0.01 * c : 0;
+
+  const vatAmt = 0.15 * c;
+
+  const total = nhilAmt + getFundAmt + cstAmt + tourismAmt + vatAmt;
+
+  nh.value = fmt(nhilAmt);
+  gf.value = fmt(getFundAmt);
+  cst1.value = cstToggle.checked ? fmt(cstAmt) : "—";
+  tourism1.value = tourismToggle.checked ? fmt(tourismAmt) : "—";
+  v.value = fmt(vatAmt);
+
+  t1.value = fmt(total);
+  vi.value = fmt(c + total);
 }
 
+
+/* ---------- APP 2 ---------- */
 function calculate2(){
-const viVal = +document.getElementById("vi2").value
-const c = viVal / 1.2
-document.getElementById("nh2").value = fmt(0.025*c)
-document.getElementById("gf2").value = fmt(0.025*c)
-document.getElementById("v2").value = fmt(0.15*c)
-document.getElementById("t2").value = fmt(0.2*c)
-document.getElementById("c2").value = fmt(c)
+  const viVal = +vi2.value || 0;
+
+  let rate = 0.20; // NHIL + GETFund + VAT
+
+  if (cstToggle2.checked) rate += 0.05;
+  if (tourismToggle2.checked) rate += 0.01;
+
+  const c = viVal / (1 + rate);
+
+  const nhilAmt = 0.025 * c;
+  const getFundAmt = 0.025 * c;
+  const cstAmt = cstToggle2.checked ? 0.05 * c : 0;
+  const tourismAmt = tourismToggle2.checked ? 0.01 * c : 0;
+  const vatAmt = 0.15 * c;
+
+  const total = nhilAmt + getFundAmt + cstAmt + tourismAmt + vatAmt;
+
+  nh2.value = fmt(nhilAmt);
+  gf2.value = fmt(getFundAmt);
+  cst2.value = cstToggle2.checked ? fmt(cstAmt) : "—";
+  tourism2.value = tourismToggle2.checked ? fmt(tourismAmt) : "—";
+  v2.value = fmt(vatAmt);
+
+  t2.value = fmt(total);
+  c2.value = fmt(c);
 }
 
+/* ---------- APP 3 ---------- */
 function calculate3(){
-const c = +document.getElementById("c3").value
-document.getElementById("v3").value = fmt(0.03*c)
-document.getElementById("vi3").value = fmt(c*1.03)
+const c=+c3.value||0;
+const vat=0.03*c;
+v3.value=fmt(vat);
+vi3.value=fmt(c+vat);
 }
 
-function fillSummary(type){
-window.summary = {
-type: type,
-date: new Date().toLocaleString(),
-cost: document.getElementById("cost").value || document.getElementById("c2").value || document.getElementById("c3").value || "—",
-nh: document.getElementById("nh").value || document.getElementById("nh2").value || "—",
-gf: document.getElementById("gf").value || document.getElementById("gf2").value || "—",
-vat: document.getElementById("v").value || document.getElementById("v2").value || document.getElementById("v3").value || "—",
-total: document.getElementById("t1").value || document.getElementById("t2").value || "—",
-vi: document.getElementById("vi").value || document.getElementById("vi2").value || document.getElementById("vi3").value || "—"
-}
-}
-
+/* ---------- PDF ---------- */
 function exportPDF(type){
-fillSummary(type)
-const { jsPDF } = window.jspdf
-const pdf = new jsPDF()
-
-pdf.setFont("helvetica","bold")
-pdf.setFontSize(18)
-pdf.text("RAS 2026 VAT TRANSACTION SUMMARY", 20, 20)
-pdf.setFontSize(12)
-pdf.setFont("helvetica","normal")
-pdf.text("Business/Platform Name: ______________________", 20, 28)
-pdf.text("Date: " + summary.date, 20, 36)
-pdf.text("Transaction Type: " + summary.type, 20, 44)
-
-// Table headers
-const startY = 52
-const rowHeight = 10
-const colX = [20, 120]
-const fields = [
-["Cost", summary.cost],
-["NHIL", summary.nh],
-["GETFund", summary.gf],
-["VAT", summary.vat],
-["Total Levies", summary.total],
-["VAT Inclusive", summary.vi]
-]
-
-fields.forEach((f,i)=>{
-  const y = startY + i*rowHeight
-  pdf.rect(colX[0]-2, y-7, 170, rowHeight)
-  pdf.text(f[0], colX[0], y)
-  pdf.text(f[1], colX[1], y)
-})
-
-pdf.setFontSize(10)
-pdf.text("Generated by RAS 2026 VAT Calculator", 20, startY + fields.length*rowHeight + 8)
-pdf.save("VAT_Summary_2026.pdf")
+const {jsPDF}=window.jspdf;
+const pdf=new jsPDF();
+pdf.setFontSize(14);
+pdf.text("RAS 2026 VAT TRANSACTION SUMMARY",20,20);
+pdf.text("Transaction Type: "+type,20,30);
+pdf.save("RAS_VAT_2026.pdf");
 }
 </script>
 

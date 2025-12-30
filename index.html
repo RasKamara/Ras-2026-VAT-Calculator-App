@@ -43,7 +43,6 @@ button:hover{background:#7f00ff}
 <div class="toggle-buttons">
   <button class="toggle-button active" onclick="showApp(0)">Cost</button>
   <button class="toggle-button" onclick="showApp(1)">VAT Inclusive</button>
-  <button class="toggle-button" onclick="showApp(2)">Flat Rate</button>
 </div>
 
 <!-- ================= APP 1 ================= -->
@@ -64,7 +63,7 @@ button:hover{background:#7f00ff}
 <label>CST (5%)</label><input id="cst1" readonly>
 <label>Tourism Levy (1%)</label><input id="tourism1" readonly>
 <label>VAT (15%)</label><input id="v" readonly>
-<label>Total Levies</label><input id="t1" readonly class="result-highlight">
+<label>Total Levy</label><input id="t1" readonly class="result-highlight">
 <label>VAT Inclusive</label><input id="vi" readonly>
 
 <button onclick="exportPDF('Standard Rate')">Export PDF</button>
@@ -88,24 +87,10 @@ button:hover{background:#7f00ff}
 <label>CST</label><input id="cst2" readonly>
 <label>Tourism Levy</label><input id="tourism2" readonly>
 <label>VAT</label><input id="v2" readonly>
-<label>Total Levies</label><input id="t2" readonly class="result-highlight">
+<label>Total Levy</label><input id="t2" readonly class="result-highlight">
 <label>Cost</label><input id="c2" readonly>
 
 <button onclick="exportPDF('VAT Inclusive')">Export PDF</button>
-</div>
-
-<!-- ================= APP 3 ================= -->
-<div id="app3" class="tab-container">
-<label>Cost</label>
-<input type="number" id="c3">
-
-<button onclick="calculate3()">Calculate</button>
-<button onclick="reset('app3')">Reset</button>
-
-<label>VAT (3%)</label><input id="v3" readonly>
-<label>VAT Inclusive</label><input id="vi3" readonly>
-
-<button onclick="exportPDF('Flat Rate Scheme')">Export PDF</button>
 </div>
 </div>
 
@@ -114,7 +99,7 @@ const fmt=n=>Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2,maxi
 
 function toggleDarkMode(){document.body.classList.toggle("dark-mode")}
 function showApp(i){
-["app1","app2","app3"].forEach((id,x)=>{
+["app1","app2"].forEach((id,x)=>{
 document.getElementById(id).classList.toggle("active",x===i)
 document.querySelectorAll(".toggle-button")[x].classList.toggle("active",x===i)
 })
@@ -127,13 +112,11 @@ function calculate1(){
 
   const nhilAmt = 0.025 * c;
   const getFundAmt = 0.025 * c;
-
   const cstAmt = cstToggle.checked ? 0.05 * c : 0;
   const tourismAmt = tourismToggle.checked ? 0.01 * c : 0;
-
   const vatAmt = 0.15 * c;
 
-  const total = nhilAmt + getFundAmt + cstAmt + tourismAmt + vatAmt;
+  const totalLevy = nhilAmt + getFundAmt + cstAmt + tourismAmt;
 
   nh.value = fmt(nhilAmt);
   gf.value = fmt(getFundAmt);
@@ -141,19 +124,18 @@ function calculate1(){
   tourism1.value = tourismToggle.checked ? fmt(tourismAmt) : "—";
   v.value = fmt(vatAmt);
 
-  t1.value = fmt(total);
-  vi.value = fmt(c + total);
+  t1.value = fmt(totalLevy);
+  vi.value = fmt(c + totalLevy + vatAmt);
 }
-
 
 /* ---------- APP 2 ---------- */
 function calculate2(){
   const viVal = +vi2.value || 0;
 
-  let rate = 0.20; // NHIL + GETFund + VAT
-
+  let rate = 0.05; // NHIL + GETFund
   if (cstToggle2.checked) rate += 0.05;
   if (tourismToggle2.checked) rate += 0.01;
+  rate += 0.15; // VAT
 
   const c = viVal / (1 + rate);
 
@@ -163,7 +145,7 @@ function calculate2(){
   const tourismAmt = tourismToggle2.checked ? 0.01 * c : 0;
   const vatAmt = 0.15 * c;
 
-  const total = nhilAmt + getFundAmt + cstAmt + tourismAmt + vatAmt;
+  const totalLevy = nhilAmt + getFundAmt + cstAmt + tourismAmt;
 
   nh2.value = fmt(nhilAmt);
   gf2.value = fmt(getFundAmt);
@@ -171,16 +153,8 @@ function calculate2(){
   tourism2.value = tourismToggle2.checked ? fmt(tourismAmt) : "—";
   v2.value = fmt(vatAmt);
 
-  t2.value = fmt(total);
+  t2.value = fmt(totalLevy);
   c2.value = fmt(c);
-}
-
-/* ---------- APP 3 ---------- */
-function calculate3(){
-const c=+c3.value||0;
-const vat=0.03*c;
-v3.value=fmt(vat);
-vi3.value=fmt(c+vat);
 }
 
 /* ---------- PDF ---------- */
@@ -202,62 +176,37 @@ function exportPDF(type){
 
   y += 18;
 
-  // Detect active app
   const app1Active = document.getElementById("app1").classList.contains("active");
-  const app2Active = document.getElementById("app2").classList.contains("active");
-  const app3Active = document.getElementById("app3").classList.contains("active");
 
-  let rows = [];
+  let rows = app1Active ? [
+    ["Cost", cost.value],
+    ["NHIL", nh.value],
+    ["GETFund", gf.value],
+    ["CST", cst1.value],
+    ["Tourism Levy", tourism1.value],
+    ["VAT", v.value],
+    ["Total Levy", t1.value],
+    ["VAT Inclusive", vi.value]
+  ] : [
+    ["VAT Inclusive", vi2.value],
+    ["Cost", c2.value],
+    ["NHIL", nh2.value],
+    ["GETFund", gf2.value],
+    ["CST", cst2.value],
+    ["Tourism Levy", tourism2.value],
+    ["VAT", v2.value],
+    ["Total Levy", t2.value]
+  ];
 
-  if(app1Active){
-    rows = [
-      ["Cost", cost.value],
-      ["NHIL", nh.value],
-      ["GETFund", gf.value],
-      ["CST", cst1.value],
-      ["Tourism Levy", tourism1.value],
-      ["VAT", v.value],
-      ["Total Levies", t1.value],
-      ["VAT Inclusive", vi.value]
-    ];
-  }
-
-  if(app2Active){
-    rows = [
-      ["VAT Inclusive", vi2.value],
-      ["Cost", c2.value],
-      ["NHIL", nh2.value],
-      ["GETFund", gf2.value],
-      ["CST", cst2.value],
-      ["Tourism Levy", tourism2.value],
-      ["VAT", v2.value],
-      ["Total Levies", t2.value]
-    ];
-  }
-
-  if(app3Active){
-    rows = [
-      ["Cost", c3.value],
-      ["VAT (3%)", v3.value],
-      ["VAT Inclusive", vi3.value]
-    ];
-  }
-
-  // Draw table
-  rows.forEach(r => {
+  rows.forEach(r=>{
     pdf.rect(18, y - 6, 174, 10);
     pdf.text(r[0], 20, y);
     pdf.text(r[1] || "—", 120, y);
     y += 10;
   });
 
-  y += 8;
-  pdf.setFontSize(9);
-  pdf.text("Generated by RAS 2026 VAT Calculator", 20, y);
-
   pdf.save("RAS_VAT_2026.pdf");
 }
-
 </script>
 
 </body>
